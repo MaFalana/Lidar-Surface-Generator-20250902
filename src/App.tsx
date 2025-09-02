@@ -8,6 +8,7 @@ import { ProgressIndicator } from './components/Progress/ProgressIndicator';
 import { uploadFiles } from './services/upload';
 import { getJobStatus, getDownloadUrls, downloadFile } from './services/jobs';
 import { ProcessingConfig, JobStatus, PNEZDPoint } from './types';
+import { hwcLogoDark } from './assets';
 import './styles/index.css';
 
 function App() {
@@ -161,7 +162,7 @@ function App() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <img 
-                src="/assets/hwc-logo-dark.png" 
+                src={hwcLogoDark} 
                 alt="HWC Engineering" 
                 className="h-8 sm:h-10"
               />
