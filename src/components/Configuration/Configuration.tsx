@@ -82,12 +82,12 @@ export const Configuration: React.FC<ConfigurationProps> = ({
           <label className="block text-sm font-medium text-gray-700 mb-3">
             Grid Spacing (Feet)
           </label>
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             {GRID_SPACING_OPTIONS.map((option) => (
               <button
                 key={option.value}
                 onClick={() => setSelectedGridSpacing(option.value)}
-                className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+                className={`px-6 py-3 rounded-lg font-medium transition-colors flex-1 ${
                   selectedGridSpacing === option.value
                     ? 'bg-hwc-red text-white'
                     : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-hwc-red'
@@ -140,12 +140,12 @@ export const Configuration: React.FC<ConfigurationProps> = ({
           <label className="block text-sm font-medium text-gray-700 mb-3">
             Output Formats (select multiple)
           </label>
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             {OUTPUT_FORMATS.map((format) => (
               <button
                 key={format.value}
                 onClick={() => toggleFormat(format.value)}
-                className={`px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2 ${
+                className={`px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 flex-1 ${
                   selectedFormats.includes(format.value)
                     ? 'bg-hwc-red text-white'
                     : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-hwc-red'

@@ -33,6 +33,14 @@ export const FileUpload: React.FC<FileUploadProps> = ({ files, onFilesChange }) 
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
   };
 
+  const truncateFilename = (filename: string, maxLength: number = 30): string => {
+    if (filename.length <= maxLength) return filename;
+    const extension = filename.split('.').pop();
+    const nameWithoutExt = filename.substring(0, filename.lastIndexOf('.'));
+    const truncatedName = nameWithoutExt.substring(0, maxLength - extension!.length - 4);
+    return `${truncatedName}...${extension}`;
+  };
+
   return (
     <div className="section-card">
       <div className="flex items-center gap-3 mb-6">
@@ -77,12 +85,14 @@ export const FileUpload: React.FC<FileUploadProps> = ({ files, onFilesChange }) 
           <div className="space-y-2">
             {files.map((file, index) => (
               <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <svg className="h-5 w-5 text-hwc-red" fill="currentColor" viewBox="0 0 20 20">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <svg className="h-5 w-5 text-hwc-red flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
                   </svg>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{file.name}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-gray-900 truncate" title={file.name}>
+                      {truncateFilename(file.name)}
+                    </p>
                     <p className="text-xs text-gray-500">{formatFileSize(file.size)}</p>
                   </div>
                 </div>

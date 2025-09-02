@@ -5,18 +5,42 @@ interface DownloadProps {
   downloadUrls: Record<string, string> | null;
   isDownloading: boolean;
   onDownload: (url: string, filename: string) => void;
+  mergeEnabled?: boolean;
 }
 
-export const Download: React.FC<DownloadProps> = ({ downloadUrls, isDownloading, onDownload }) => {
+export const Download: React.FC<DownloadProps> = ({ downloadUrls, isDownloading, onDownload, mergeEnabled = false }) => {
   const getFileFormat = (filename: string): string => {
     const ext = filename.split('.').pop()?.toUpperCase();
     return ext || 'FILE';
   };
 
-  const handleDownloadAll = async () => {
-    if (!downloadUrls) return;
+  const truncateFilename = (filename: string, maxLength: number = 40): string => {
+    if (filename.length <= maxLength) return filename;
+    const extension = filename.split('.').pop();
+    const nameWithoutExt = filename.substring(0, filename.lastIndexOf('.'));
+    const truncatedName = nameWithoutExt.substring(0, maxLength - extension!.length - 4);
+    return `${truncatedName}...${extension}`;
+  };
+
+  const getFilteredUrls = () => {
+    if (!downloadUrls) return {};
     
-    for (const [filename, url] of Object.entries(downloadUrls)) {
+    // If merge is enabled, only show merged files
+    if (mergeEnabled) {
+      return Object.fromEntries(
+        Object.entries(downloadUrls).filter(([filename]) => 
+          filename.includes('merged') || filename.includes('output')
+        )
+      );
+    }
+    
+    return downloadUrls;
+  };
+
+  const handleDownloadAll = async () => {
+    const urls = getFilteredUrls();
+    
+    for (const [filename, url] of Object.entries(urls)) {
       await onDownload(url, filename);
     }
   };
@@ -33,14 +57,16 @@ export const Download: React.FC<DownloadProps> = ({ downloadUrls, isDownloading,
       {downloadUrls && Object.keys(downloadUrls).length > 0 ? (
         <div className="space-y-4">
           <div className="grid gap-3">
-            {Object.entries(downloadUrls).map(([filename, url]) => (
+            {Object.entries(getFilteredUrls()).map(([filename, url]) => (
               <div key={filename} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div className="flex items-center gap-3">
                   <div className="flex items-center justify-center w-10 h-10 bg-hwc-red/10 text-hwc-red rounded-lg">
                     <span className="text-xs font-semibold">{getFileFormat(filename)}</span>
                   </div>
-                  <div>
-                    <p className="font-medium text-gray-900">{filename}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-gray-900 truncate" title={filename}>
+                      {truncateFilename(filename)}
+                    </p>
                     <p className="text-sm text-gray-500">Ready for download</p>
                   </div>
                 </div>
@@ -58,7 +84,7 @@ export const Download: React.FC<DownloadProps> = ({ downloadUrls, isDownloading,
             ))}
           </div>
 
-          {Object.keys(downloadUrls).length > 1 && (
+          {Object.keys(getFilteredUrls()).length > 1 && (
             <button
               onClick={handleDownloadAll}
               disabled={isDownloading}
