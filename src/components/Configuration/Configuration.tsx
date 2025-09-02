@@ -38,7 +38,7 @@ export const Configuration: React.FC<ConfigurationProps> = ({
       output_formats: selectedFormats.join(','),
       merge_outputs: mergeOutputs,
     });
-  }, [selectedGridSpacing, selectedFormats, mergeOutputs]);
+  }, [selectedGridSpacing, selectedFormats, mergeOutputs, onConfigChange]);
 
   const toggleFormat = (format: string) => {
     setSelectedFormats(prev => 
