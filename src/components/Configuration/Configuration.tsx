@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
 import { ProcessingConfig, EPSGOption } from '../../types';
 import { GRID_SPACING_OPTIONS, OUTPUT_FORMATS, INDIANA_LIDAR_INFO, LIDAR_SOURCE_INFO } from '../../utils/constants';
-import epsgData from '../../../source/EPSG.json';
+import epsgData from '../../data/EPSG.json';
 
 interface ConfigurationProps {
   config: ProcessingConfig;
