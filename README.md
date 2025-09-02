@@ -1,6 +1,6 @@
-# LiDAR Surface Generator Frontend
+# LiDAR Breakline Generator Frontend
 
-A responsive web application for processing LiDAR point cloud files and generating surface breaklines.
+A responsive web application for processing LiDAR point cloud files and generating breaklines.
 
 ## Project Overview
 
@@ -8,7 +8,7 @@ This frontend application interfaces with a FastAPI backend to provide users wit
 - Upload LAS/LAZ point cloud files
 - Configure processing parameters
 - Preview processed data (PNEZD format)
-- Download outputs in DXF or CSV formats
+- Download breakline outputs in DXF or CSV formats
 
 ## Features
 

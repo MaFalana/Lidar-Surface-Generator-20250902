@@ -166,8 +166,8 @@ function App() {
                 className="h-8 sm:h-10"
               />
               <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-hwc-dark">LiDAR Surface Generator</h1>
-                <p className="text-xs sm:text-sm text-gray-600">Process point cloud files to generate surface breaklines</p>
+                <h1 className="text-xl sm:text-2xl font-bold text-hwc-dark">LiDAR Breakline Generator</h1>
+                <p className="text-xs sm:text-sm text-gray-600">Process point cloud files to generate breaklines</p>
               </div>
             </div>
             {showProgress && (

@@ -1,7 +1,7 @@
-# TASKS.md - LiDAR Surface Generator Frontend
+# TASKS.md - LiDAR Breakline Generator Frontend
 
 ## Session Context
-Successfully built a responsive React/TypeScript frontend for the LiDAR Surface Generator API. The application provides a clean interface matching HWC Engineering branding with full functionality for uploading, processing, and downloading point cloud data.
+Successfully built a responsive React/TypeScript frontend for the LiDAR Breakline Generator API. The application provides a clean interface matching HWC Engineering branding with full functionality for uploading, processing, and downloading breakline data.
 
 API is deployed at: https://surface-gen-api.purplebush-adcf4e3b.eastus.azurecontainerapps.io/
 Azure Blob Storage is configured with automatic file maintenance handled by the API.
@@ -29,6 +29,17 @@ Azure Blob Storage is configured with automatic file maintenance handled by the 
 - [x] Style according to HWC brand guidelines
 - [x] Add error handling and user feedback with toast notifications
 - [x] Install all dependencies
+- [x] Add searchable combo boxes for CRS selection
+- [x] Remove unnecessary Output Units field
+- [x] Add visible progress indicators
+- [x] Fix Process button state management
+- [x] Fix CORS download issues
+- [x] Improve responsive layout and filename display
+- [x] Make header and progress sticky
+- [x] Remove checkmarks from format toggle buttons
+
+## Ready for Deployment 🚀
+Frontend is feature-complete and ready for production deployment!
 
 ## Implementation Details
 

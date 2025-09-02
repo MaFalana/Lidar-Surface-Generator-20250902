@@ -1,0 +1,32 @@
+# Vercel ignore file - excludes files from deployment
+
+# Documentation
+docs/
+spec/
+references/
+issues/
+
+# Source files (read-only reference)
+source/
+
+# Environment files (use Vercel dashboard for env vars)
+.env.*
+
+# Development files
+*.md
+.vscode/
+.idea/
+
+# Test files
+**/*.test.*
+**/*.spec.*
+test/
+tests/
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
