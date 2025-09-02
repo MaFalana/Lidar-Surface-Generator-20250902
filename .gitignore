@@ -21,7 +21,7 @@ dist/
 build/
 .cache/
 .next/
-public/
+
 .vscode/    
 .idea/
 issues/
