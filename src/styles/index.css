@@ -18,7 +18,7 @@
   }
   
   .btn-secondary {
-    @apply px-6 py-3 bg-white text-hwc-dark font-medium rounded-lg border-2 border-hwc-gray hover:bg-gray-50 transition-colors duration-200;
+    @apply px-4 sm:px-6 py-2 sm:py-3 bg-white text-hwc-dark font-medium rounded-lg border-2 border-hwc-gray hover:bg-gray-50 transition-colors duration-200 text-sm;
   }
   
   .input-field {

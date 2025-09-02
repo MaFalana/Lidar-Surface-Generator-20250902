@@ -14,7 +14,7 @@ export const Download: React.FC<DownloadProps> = ({ downloadUrls, isDownloading,
     return ext || 'FILE';
   };
 
-  const truncateFilename = (filename: string, maxLength: number = 40): string => {
+  const truncateFilename = (filename: string, maxLength: number = 25): string => {
     if (filename.length <= maxLength) return filename;
     const extension = filename.split('.').pop();
     const nameWithoutExt = filename.substring(0, filename.lastIndexOf('.'));
@@ -58,28 +58,28 @@ export const Download: React.FC<DownloadProps> = ({ downloadUrls, isDownloading,
         <div className="space-y-4">
           <div className="grid gap-3">
             {Object.entries(getFilteredUrls()).map(([filename, url]) => (
-              <div key={filename} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center w-10 h-10 bg-hwc-red/10 text-hwc-red rounded-lg">
+              <div key={filename} className="bg-gray-50 rounded-lg p-3 sm:p-4">
+                <div className="flex items-start sm:items-center gap-3">
+                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-hwc-red/10 text-hwc-red rounded-lg flex-shrink-0">
                     <span className="text-xs font-semibold">{getFileFormat(filename)}</span>
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium text-gray-900 truncate" title={filename}>
-                      {truncateFilename(filename)}
+                  <div className="min-w-0 flex-1 mr-3">
+                    <p className="font-medium text-gray-900 text-sm leading-tight break-all" title={filename}>
+                      {filename}
                     </p>
-                    <p className="text-sm text-gray-500">Ready for download</p>
+                    <p className="text-xs text-gray-500 mt-1">Ready for download</p>
                   </div>
+                  <button
+                    onClick={() => onDownload(url, filename)}
+                    disabled={isDownloading}
+                    className="btn-secondary flex items-center gap-1 flex-shrink-0"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                    </svg>
+                    <span className="hidden sm:inline">Download</span>
+                  </button>
                 </div>
-                <button
-                  onClick={() => onDownload(url, filename)}
-                  disabled={isDownloading}
-                  className="btn-secondary flex items-center gap-2"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
-                  </svg>
-                  Download
-                </button>
               </div>
             ))}
           </div>
