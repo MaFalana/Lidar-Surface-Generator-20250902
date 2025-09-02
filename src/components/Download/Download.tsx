@@ -1,5 +1,4 @@
 import React from 'react';
-import { downloadFile } from '../../services/jobs';
 
 interface DownloadProps {
   downloadUrls: Record<string, string> | null;
@@ -14,13 +13,6 @@ export const Download: React.FC<DownloadProps> = ({ downloadUrls, isDownloading,
     return ext || 'FILE';
   };
 
-  const truncateFilename = (filename: string, maxLength: number = 25): string => {
-    if (filename.length <= maxLength) return filename;
-    const extension = filename.split('.').pop();
-    const nameWithoutExt = filename.substring(0, filename.lastIndexOf('.'));
-    const truncatedName = nameWithoutExt.substring(0, maxLength - extension!.length - 4);
-    return `${truncatedName}...${extension}`;
-  };
 
   const getFilteredUrls = () => {
     if (!downloadUrls) return {};

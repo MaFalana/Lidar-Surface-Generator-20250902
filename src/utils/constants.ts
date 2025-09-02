@@ -1,8 +1,8 @@
 export const GRID_SPACING_OPTIONS = [
-  { label: '25 feet', value: 25 },
-  { label: '50 feet', value: 50 },
+  { label: '25 feet', value: 25 as const },
+  { label: '50 feet', value: 50 as const },
   // Add more options here in the future if needed
-] as const;
+];
 
 export const OUTPUT_FORMATS = [
   { label: 'DXF', value: 'dxf', selected: true },

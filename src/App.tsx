@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
 import { FileUpload } from './components/FileUpload/FileUpload';
 import { Configuration } from './components/Configuration/Configuration';
@@ -142,7 +142,7 @@ function App() {
   const handleDownload = async (url: string, filename: string) => {
     setIsDownloading(true);
     try {
-      await downloadFile(url);
+      await downloadFile(url, filename);
       toast.success(`Downloaded ${filename}`);
     } catch (error) {
       toast.error('Download failed');
@@ -198,7 +198,7 @@ function App() {
               <ProgressIndicator
                 stage={uploadProgress < 100 ? 'upload' : jobStatus === 'completed' ? 'completed' : jobStatus === 'failed' ? 'failed' : 'processing'}
                 uploadProgress={uploadProgress}
-                jobStatus={jobStatus}
+                jobStatus={jobStatus || undefined}
                 jobProgress={jobProgress}
               />
             </div>
