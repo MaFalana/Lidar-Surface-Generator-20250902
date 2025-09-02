@@ -161,7 +161,7 @@ function App() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <img 
-                src="/assets/HWC Logo_Dark.png" 
+                src="/assets/hwc-logo-dark.png" 
                 alt="HWC Engineering" 
                 className="h-8 sm:h-10"
               />

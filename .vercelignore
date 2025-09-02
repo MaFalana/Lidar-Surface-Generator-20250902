@@ -13,7 +13,7 @@ source/
 .env.*
 
 # Development files
-*.md
+README.md
 .vscode/
 .idea/
 
