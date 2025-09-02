@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Select from 'react-select';
 import { ProcessingConfig, EPSGOption } from '../../types';
 import { GRID_SPACING_OPTIONS, OUTPUT_FORMATS, INDIANA_LIDAR_INFO, LIDAR_SOURCE_INFO } from '../../utils/constants';
 import epsgData from '../../../source/EPSG.json';
@@ -23,6 +24,12 @@ export const Configuration: React.FC<ConfigurationProps> = ({
   const [mergeOutputs, setMergeOutputs] = useState(false);
 
   const epsgOptions = epsgData as EPSGOption[];
+  
+  // Format options for react-select
+  const selectOptions = epsgOptions.map(option => ({
+    value: option._id,
+    label: `${option.name} (${option.unit})`,
+  }));
 
   useEffect(() => {
     onConfigChange({
@@ -39,6 +46,25 @@ export const Configuration: React.FC<ConfigurationProps> = ({
         ? prev.filter(f => f !== format)
         : [...prev, format]
     );
+  };
+
+  const customStyles = {
+    control: (provided: any, state: any) => ({
+      ...provided,
+      borderColor: state.isFocused ? '#EE2F27' : '#D1D5DB',
+      boxShadow: state.isFocused ? '0 0 0 3px rgba(238, 47, 39, 0.1)' : 'none',
+      '&:hover': {
+        borderColor: '#EE2F27',
+      },
+    }),
+    option: (provided: any, state: any) => ({
+      ...provided,
+      backgroundColor: state.isSelected ? '#EE2F27' : state.isFocused ? '#FEE2E2' : 'white',
+      color: state.isSelected ? 'white' : '#292C30',
+      '&:active': {
+        backgroundColor: '#DC2626',
+      },
+    }),
   };
 
   return (
@@ -78,18 +104,17 @@ export const Configuration: React.FC<ConfigurationProps> = ({
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Source Coordinate System
           </label>
-          <select
-            className="input-field"
-            value={config.source_epsg || ''}
-            onChange={(e) => onConfigChange({ ...config, source_epsg: parseInt(e.target.value) })}
-          >
-            <option value="">Select coordinate system...</option>
-            {epsgOptions.map((option) => (
-              <option key={option._id} value={option._id}>
-                {option.name} ({option.unit})
-              </option>
-            ))}
-          </select>
+          <Select
+            styles={customStyles}
+            options={selectOptions}
+            value={selectOptions.find(opt => opt.value === config.source_epsg)}
+            onChange={(selected) => onConfigChange({ ...config, source_epsg: selected?.value })}
+            placeholder="Select coordinate system..."
+            isClearable
+            isSearchable
+            className="react-select-container"
+            classNamePrefix="react-select"
+          />
         </div>
 
         {/* Target Coordinate System */}
@@ -97,18 +122,17 @@ export const Configuration: React.FC<ConfigurationProps> = ({
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Target Coordinate System
           </label>
-          <select
-            className="input-field"
-            value={config.target_epsg || ''}
-            onChange={(e) => onConfigChange({ ...config, target_epsg: parseInt(e.target.value) })}
-          >
-            <option value="">Select coordinate system...</option>
-            {epsgOptions.map((option) => (
-              <option key={option._id} value={option._id}>
-                {option.name} ({option.unit})
-              </option>
-            ))}
-          </select>
+          <Select
+            styles={customStyles}
+            options={selectOptions}
+            value={selectOptions.find(opt => opt.value === config.target_epsg)}
+            onChange={(selected) => onConfigChange({ ...config, target_epsg: selected?.value })}
+            placeholder="Select coordinate system..."
+            isClearable
+            isSearchable
+            className="react-select-container"
+            classNamePrefix="react-select"
+          />
         </div>
 
         {/* Output Formats */}
@@ -136,18 +160,6 @@ export const Configuration: React.FC<ConfigurationProps> = ({
               </button>
             ))}
           </div>
-        </div>
-
-        {/* Output Units */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Output Units
-          </label>
-          <select className="input-field" defaultValue="unitless">
-            <option value="unitless">Unitless</option>
-            <option value="feet">Feet</option>
-            <option value="meters">Meters</option>
-          </select>
         </div>
 
         {/* Merge Option */}

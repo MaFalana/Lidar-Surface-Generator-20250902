@@ -13,17 +13,14 @@ export const getDownloadUrls = async (jobId: string, expiryHours: number = 1): P
   return response.data;
 };
 
-export const downloadFile = async (url: string): Promise<void> => {
-  const response = await fetch(url);
-  const blob = await response.blob();
-  const downloadUrl = window.URL.createObjectURL(blob);
-  const filename = url.split('/').pop() || 'download';
-  
+export const downloadFile = async (url: string, filename: string): Promise<void> => {
+  // Create a hidden anchor element and trigger download
+  // This works with Azure Blob Storage SAS URLs without CORS issues
   const link = document.createElement('a');
-  link.href = downloadUrl;
+  link.href = url;
   link.download = filename;
+  link.style.display = 'none';
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
-  window.URL.revokeObjectURL(downloadUrl);
 };
