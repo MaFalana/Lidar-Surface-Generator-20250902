@@ -8,7 +8,7 @@ import { ProgressIndicator } from './components/Progress/ProgressIndicator';
 import { uploadFiles } from './services/upload';
 import { getJobStatus, getDownloadUrls, downloadFile } from './services/jobs';
 import { ProcessingConfig, JobStatus, PNEZDPoint } from './types';
-import { hwcLogoDark } from './assets';
+import { hwcLogoDark } from './assets/index';
 import './styles/index.css';
 
 function App() {
