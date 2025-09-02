@@ -214,21 +214,21 @@ function App() {
           {/* Left Column */}
           <div className="space-y-6">
             <FileUpload files={files} onFilesChange={setFiles} />
-            <Preview 
-              points={previewPoints} 
-              isLoading={isPolling && jobStatus === 'processing'}
-              totalPoints={previewPoints.length}
-            />
-          </div>
-
-          {/* Right Column */}
-          <div className="space-y-6">
             <Configuration
               config={config}
               onConfigChange={setConfig}
               onProcess={handleProcess}
               isProcessing={isProcessing || isPolling}
               filesSelected={files.length > 0}
+            />
+          </div>
+
+          {/* Right Column */}
+          <div className="space-y-6">
+            <Preview 
+              points={previewPoints} 
+              isLoading={isPolling && jobStatus === 'processing'}
+              totalPoints={previewPoints.length}
             />
             <Download
               downloadUrls={downloadUrls}
