@@ -1,13 +1,14 @@
 import React from 'react';
-import { PNEZDPoint } from '../../types';
+import { PNEZDPoint, ElevationStatistics } from '../../types';
 
 interface PreviewProps {
   points: PNEZDPoint[];
   isLoading: boolean;
   totalPoints?: number;
+  elevationStats?: ElevationStatistics;
 }
 
-export const Preview: React.FC<PreviewProps> = ({ points, isLoading, totalPoints }) => {
+export const Preview: React.FC<PreviewProps> = ({ points, isLoading, totalPoints, elevationStats }) => {
   const calculateStats = () => {
     if (points.length === 0) return { min: 0, max: 0, avg: 0 };
     
@@ -19,7 +20,9 @@ export const Preview: React.FC<PreviewProps> = ({ points, isLoading, totalPoints
     return { min, max, avg };
   };
 
-  const stats = calculateStats();
+  const stats = elevationStats 
+    ? { min: elevationStats.min, max: elevationStats.max, avg: elevationStats.mean }
+    : calculateStats();
 
   return (
     <div className="section-card">
@@ -58,33 +61,35 @@ export const Preview: React.FC<PreviewProps> = ({ points, isLoading, totalPoints
 
           {/* Table */}
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-200 bg-gray-50">
-                  <th className="px-4 py-3 text-left font-medium text-gray-700">Point</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-700">Northing</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-700">Easting</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-700">Elevation</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-700">Description</th>
-                </tr>
-              </thead>
-              <tbody>
-                {points.slice(0, 50).map((point, index) => (
-                  <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="px-4 py-3 text-gray-900">{point.point}</td>
-                    <td className="px-4 py-3 text-gray-900">{point.northing.toFixed(3)}</td>
-                    <td className="px-4 py-3 text-gray-900">{point.easting.toFixed(3)}</td>
-                    <td className="px-4 py-3 text-gray-900">{point.elevation.toFixed(3)}</td>
-                    <td className="px-4 py-3 text-gray-500">{point.description || '-'}</td>
+            <div className="max-h-96 overflow-y-auto border border-gray-200 rounded-lg">
+              <table className="w-full text-sm">
+                <thead className="sticky top-0 bg-gray-50 z-10">
+                  <tr className="border-b border-gray-200">
+                    <th className="px-4 py-3 text-left font-medium text-gray-700">Point</th>
+                    <th className="px-4 py-3 text-left font-medium text-gray-700">Northing</th>
+                    <th className="px-4 py-3 text-left font-medium text-gray-700">Easting</th>
+                    <th className="px-4 py-3 text-left font-medium text-gray-700">Elevation</th>
+                    <th className="px-4 py-3 text-left font-medium text-gray-700">Description</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {points.slice(0, 50).map((point, index) => (
+                    <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
+                      <td className="px-4 py-3 text-gray-900">{point.point}</td>
+                      <td className="px-4 py-3 text-gray-900">{point.northing.toFixed(3)}</td>
+                      <td className="px-4 py-3 text-gray-900">{point.easting.toFixed(3)}</td>
+                      <td className="px-4 py-3 text-gray-900">{point.elevation.toFixed(3)}</td>
+                      <td className="px-4 py-3 text-gray-500">{point.description || '-'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
-          {points.length > 50 && (
+          {points.length > 0 && (
             <p className="text-sm text-gray-500 mt-4 text-center">
-              Showing first 50 of {totalPoints?.toLocaleString() || points.length.toLocaleString()} processed points
+              Showing {Math.min(50, points.length)} of {totalPoints?.toLocaleString() || points.length.toLocaleString()} processed points
             </p>
           )}
         </>

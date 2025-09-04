@@ -6,8 +6,8 @@ import { Preview } from './components/Preview/Preview';
 import { Download } from './components/Download/Download';
 import { ProgressIndicator } from './components/Progress/ProgressIndicator';
 import { uploadFiles } from './services/upload';
-import { getJobStatus, getDownloadUrls, downloadFile } from './services/jobs';
-import { ProcessingConfig, JobStatus, PNEZDPoint } from './types';
+import { getJobStatus, getDownloadUrls, downloadFile, getJobPreview } from './services/jobs';
+import { ProcessingConfig, JobStatus, PNEZDPoint, JobPreviewResponse } from './types';
 import { hwcLogoDark } from './assets/index';
 import './styles/index.css';
 
@@ -19,6 +19,7 @@ function App() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isPolling, setIsPolling] = useState(false);
   const [previewPoints, setPreviewPoints] = useState<PNEZDPoint[]>([]);
+  const [previewData, setPreviewData] = useState<JobPreviewResponse | null>(null);
   const [downloadUrls, setDownloadUrls] = useState<Record<string, string> | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -45,10 +46,18 @@ function App() {
           const urls = await getDownloadUrls(currentJobId);
           setDownloadUrls(urls.download_urls);
           
-          // Parse CSV for preview if available
-          const csvUrl = Object.entries(urls.download_urls).find(([name]) => name.endsWith('.csv'))?.[1];
-          if (csvUrl) {
-            await loadPreviewFromCsv(csvUrl);
+          // Get preview data from the new API endpoint
+          try {
+            const preview = await getJobPreview(currentJobId);
+            setPreviewData(preview);
+            setPreviewPoints(preview.preview_points);
+          } catch (error) {
+            console.error('Error fetching preview:', error);
+            // Fallback to CSV parsing if preview API fails
+            const csvUrl = Object.entries(urls.download_urls).find(([name]) => name.endsWith('.csv'))?.[1];
+            if (csvUrl) {
+              await loadPreviewFromCsv(csvUrl);
+            }
           }
         } else if (status.status === 'failed') {
           setIsPolling(false);
@@ -122,6 +131,7 @@ function App() {
     setJobProgress(0);
     setJobStatus('queued');
     setPreviewPoints([]);
+    setPreviewData(null);
     setDownloadUrls(null);
 
     try {
@@ -211,9 +221,22 @@ function App() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-          {/* Left Column */}
+          {/* Left Column - Mobile: Section 1 then 3 */}
           <div className="space-y-6">
             <FileUpload files={files} onFilesChange={setFiles} />
+            {/* Desktop: Preview (Section 3) in bottom left */}
+            <div className="hidden lg:block">
+              <Preview 
+                points={previewPoints} 
+                isLoading={isPolling && jobStatus === 'processing'}
+                totalPoints={previewData?.data_quality.total_points}
+                elevationStats={previewData?.elevation_statistics}
+              />
+            </div>
+          </div>
+
+          {/* Right Column - Mobile: Section 2 then 4 */}
+          <div className="space-y-6">
             <Configuration
               config={config}
               onConfigChange={setConfig}
@@ -221,15 +244,15 @@ function App() {
               isProcessing={isProcessing || isPolling}
               filesSelected={files.length > 0}
             />
-          </div>
-
-          {/* Right Column */}
-          <div className="space-y-6">
-            <Preview 
-              points={previewPoints} 
-              isLoading={isPolling && jobStatus === 'processing'}
-              totalPoints={previewPoints.length}
-            />
+            {/* Mobile: Preview (Section 3) after Configuration */}
+            <div className="lg:hidden">
+              <Preview 
+                points={previewPoints} 
+                isLoading={isPolling && jobStatus === 'processing'}
+                totalPoints={previewData?.data_quality.total_points}
+                elevationStats={previewData?.elevation_statistics}
+              />
+            </div>
             <Download
               downloadUrls={downloadUrls}
               isDownloading={isDownloading}

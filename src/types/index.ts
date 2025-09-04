@@ -55,3 +55,79 @@ export interface PNEZDPoint {
   elevation: number;
   description: string;
 }
+
+export interface ElevationStatistics {
+  min: number;
+  q1: number;
+  median: number;
+  q3: number;
+  max: number;
+  mean: number;
+  std_dev: number;
+  variance: number;
+  range: number;
+  iqr: number;
+}
+
+export interface SpatialCoverage {
+  bounding_box: {
+    min_northing: number;
+    max_northing: number;
+    min_easting: number;
+    max_easting: number;
+    min_elevation: number;
+    max_elevation: number;
+  };
+  area_sq_meters: number;
+  area_acres: number;
+  area_hectares: number;
+  point_density: number;
+  coordinate_system: string;
+}
+
+export interface DataQuality {
+  total_points: number;
+  classifications: Array<{
+    code: number;
+    name: string;
+    count: number;
+    percentage: number;
+  }>;
+  return_types: {
+    single: number;
+    first: number;
+    last: number;
+    intermediate: number;
+  };
+  gps_time_range: {
+    min: number;
+    max: number;
+    range_seconds: number;
+  };
+  intensity_stats: {
+    min: number;
+    max: number;
+    mean: number;
+    std_dev: number;
+  };
+}
+
+export interface FileMetadata {
+  filename: string;
+  file_size_mb: number;
+  las_version: string;
+  point_data_format: number;
+  creation_date: string;
+  generating_software: string;
+  system_identifier: string;
+}
+
+export interface JobPreviewResponse {
+  job_id: string;
+  preview_points: PNEZDPoint[];
+  elevation_statistics: ElevationStatistics;
+  spatial_coverage: SpatialCoverage;
+  data_quality: DataQuality;
+  file_metadata: FileMetadata;
+  processing_time_ms: number;
+}

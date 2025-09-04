@@ -1,8 +1,13 @@
 import { api } from './api';
-import { JobStatusResponse, DownloadResponse } from '../types';
+import { JobStatusResponse, DownloadResponse, JobPreviewResponse } from '../types';
 
 export const getJobStatus = async (jobId: string): Promise<JobStatusResponse> => {
   const response = await api.get<JobStatusResponse>(`/api/v1/jobs/${jobId}`);
+  return response.data;
+};
+
+export const getJobPreview = async (jobId: string): Promise<JobPreviewResponse> => {
+  const response = await api.get<JobPreviewResponse>(`/api/v1/jobs/${jobId}/preview`);
   return response.data;
 };
 
