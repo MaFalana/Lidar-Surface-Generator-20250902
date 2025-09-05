@@ -1,14 +1,17 @@
-import React from 'react';
-import { PNEZDPoint, ElevationStatistics } from '../../types';
+import React, { useState } from 'react';
+import { PNEZDPoint, ElevationStatistics, FilePreview } from '../../types';
 
 interface PreviewProps {
   points: PNEZDPoint[];
   isLoading: boolean;
   totalPoints?: number;
   elevationStats?: ElevationStatistics;
+  filePreviews?: FilePreview[];
+  isMultiFile?: boolean;
 }
 
-export const Preview: React.FC<PreviewProps> = ({ points, isLoading, totalPoints, elevationStats }) => {
+export const Preview: React.FC<PreviewProps> = ({ points, isLoading, totalPoints, elevationStats, filePreviews, isMultiFile }) => {
+  const [activeTab, setActiveTab] = useState(0);
   const calculateStats = () => {
     if (points.length === 0) return { min: 0, max: 0, avg: 0 };
     
@@ -20,42 +23,74 @@ export const Preview: React.FC<PreviewProps> = ({ points, isLoading, totalPoints
     return { min, max, avg };
   };
 
-  const stats = elevationStats 
+  // Use data from active tab if multi-file, otherwise use props
+  const activePreview = isMultiFile && filePreviews ? filePreviews[activeTab] : null;
+  const displayPoints = activePreview ? activePreview.preview_points : points;
+  const displayStats = activePreview 
+    ? { min: activePreview.elevation_statistics.min, max: activePreview.elevation_statistics.max, avg: activePreview.elevation_statistics.mean }
+    : elevationStats 
     ? { min: elevationStats.min, max: elevationStats.max, avg: elevationStats.mean }
     : calculateStats();
+  const displayTotalPoints = activePreview ? activePreview.data_quality.total_points : totalPoints;
 
   return (
     <div className="section-card">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="flex items-center justify-center w-10 h-10 bg-hwc-red text-white rounded-lg font-semibold">
-          3
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center justify-center w-10 h-10 bg-hwc-red text-white rounded-lg font-semibold">
+            3
+          </div>
+          <h2 className="text-xl font-semibold">PNEZD Preview</h2>
         </div>
-        <h2 className="text-xl font-semibold">PNEZD Preview</h2>
+        {isMultiFile && filePreviews && filePreviews.length > 1 && (
+          <span className="text-sm text-gray-500">{filePreviews.length} files processed</span>
+        )}
       </div>
+
+      {/* Tabs for multiple files */}
+      {isMultiFile && filePreviews && filePreviews.length > 1 && (
+        <div className="border-b border-gray-200 mb-4">
+          <div className="flex space-x-1 overflow-x-auto">
+            {filePreviews.map((preview, index) => (
+              <button
+                key={index}
+                onClick={() => setActiveTab(index)}
+                className={`px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors ${
+                  activeTab === index
+                    ? 'text-hwc-red border-b-2 border-hwc-red bg-gray-50'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+              >
+                {preview.file_metadata.filename.replace('.las', '').replace('.laz', '')}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-hwc-red"></div>
         </div>
-      ) : points.length > 0 ? (
+      ) : displayPoints.length > 0 ? (
         <>
           {/* Stats Summary */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div className="bg-gray-50 rounded-lg p-3">
               <p className="text-xs text-gray-500 uppercase tracking-wide">Total Points</p>
-              <p className="text-lg font-semibold text-hwc-dark">{totalPoints?.toLocaleString() || points.length.toLocaleString()}</p>
+              <p className="text-lg font-semibold text-hwc-dark">{displayTotalPoints?.toLocaleString() || displayPoints.length.toLocaleString()}</p>
             </div>
             <div className="bg-gray-50 rounded-lg p-3">
               <p className="text-xs text-gray-500 uppercase tracking-wide">Min Elevation</p>
-              <p className="text-lg font-semibold text-hwc-dark">{stats.min.toFixed(2)}</p>
+              <p className="text-lg font-semibold text-hwc-dark">{displayStats.min.toFixed(2)}</p>
             </div>
             <div className="bg-gray-50 rounded-lg p-3">
               <p className="text-xs text-gray-500 uppercase tracking-wide">Avg Elevation</p>
-              <p className="text-lg font-semibold text-hwc-dark">{stats.avg.toFixed(2)}</p>
+              <p className="text-lg font-semibold text-hwc-dark">{displayStats.avg.toFixed(2)}</p>
             </div>
             <div className="bg-gray-50 rounded-lg p-3">
               <p className="text-xs text-gray-500 uppercase tracking-wide">Max Elevation</p>
-              <p className="text-lg font-semibold text-hwc-dark">{stats.max.toFixed(2)}</p>
+              <p className="text-lg font-semibold text-hwc-dark">{displayStats.max.toFixed(2)}</p>
             </div>
           </div>
 
@@ -73,7 +108,7 @@ export const Preview: React.FC<PreviewProps> = ({ points, isLoading, totalPoints
                   </tr>
                 </thead>
                 <tbody>
-                  {points.slice(0, 50).map((point, index) => (
+                  {displayPoints.slice(0, 50).map((point, index) => (
                     <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
                       <td className="px-4 py-3 text-gray-900">{point.point}</td>
                       <td className="px-4 py-3 text-gray-900">{point.northing.toFixed(3)}</td>
@@ -87,9 +122,9 @@ export const Preview: React.FC<PreviewProps> = ({ points, isLoading, totalPoints
             </div>
           </div>
 
-          {points.length > 0 && (
+          {displayPoints.length > 0 && (
             <p className="text-sm text-gray-500 mt-4 text-center">
-              Showing {Math.min(50, points.length)} of {totalPoints?.toLocaleString() || points.length.toLocaleString()} processed points
+              Showing {Math.min(50, displayPoints.length)} of {displayTotalPoints?.toLocaleString() || displayPoints.length.toLocaleString()} processed points
             </p>
           )}
         </>

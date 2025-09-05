@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
 import { FileUpload } from './components/FileUpload/FileUpload';
 import { Configuration } from './components/Configuration/Configuration';
@@ -7,7 +7,7 @@ import { Download } from './components/Download/Download';
 import { ProgressIndicator } from './components/Progress/ProgressIndicator';
 import { uploadFiles } from './services/upload';
 import { getJobStatus, getDownloadUrls, downloadFile, getJobPreview } from './services/jobs';
-import { ProcessingConfig, JobStatus, PNEZDPoint, JobPreviewResponse } from './types';
+import { ProcessingConfig, JobStatus, PNEZDPoint, JobPreviewResponse, MultiFilePreviewResponse, FilePreview } from './types';
 import { hwcLogoDark } from './assets/index';
 import './styles/index.css';
 
@@ -18,8 +18,11 @@ function App() {
   const [jobStatus, setJobStatus] = useState<JobStatus | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isPolling, setIsPolling] = useState(false);
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const [previewPoints, setPreviewPoints] = useState<PNEZDPoint[]>([]);
-  const [previewData, setPreviewData] = useState<JobPreviewResponse | null>(null);
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [previewData, setPreviewData] = useState<JobPreviewResponse | MultiFilePreviewResponse | null>(null);
+  const [filePreviews, setFilePreviews] = useState<FilePreview[]>([]);
   const [downloadUrls, setDownloadUrls] = useState<Record<string, string> | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -28,38 +31,117 @@ function App() {
 
   // Poll job status
   useEffect(() => {
-    if (!currentJobId || !isPolling) return;
+    if (!currentJobId || !isPolling) {
+      // Clear any existing interval when polling stops
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
+      return;
+    }
 
-    const pollInterval = setInterval(async () => {
+    // Clear any existing interval before creating a new one
+    if (pollIntervalRef.current) {
+      clearInterval(pollIntervalRef.current);
+    }
+
+    pollIntervalRef.current = setInterval(async () => {
       try {
         const status = await getJobStatus(currentJobId);
         setJobStatus(status.status);
         setJobProgress(status.progress || 0);
 
         if (status.status === 'completed') {
+          // IMMEDIATELY stop the interval - this is the key fix!
+          if (pollIntervalRef.current) {
+            clearInterval(pollIntervalRef.current);
+            pollIntervalRef.current = null;
+          }
+          
+          // Now update states
           setIsPolling(false);
           setIsProcessing(false);
           setShowProgress(false);
           toast.success('Processing completed successfully!');
           
-          // Get download URLs
-          const urls = await getDownloadUrls(currentJobId);
-          setDownloadUrls(urls.download_urls);
+          // Set loading state for preview while fetching
+          setIsLoadingPreview(true);
           
-          // Get preview data from the new API endpoint
-          try {
-            const preview = await getJobPreview(currentJobId);
+          // Add a small delay to ensure files are written to Azure Blob Storage
+          // This prevents 404 errors when backend reports completion before files are ready
+          await new Promise(resolve => setTimeout(resolve, 1500));
+          
+          // Try to fetch with retry logic for robustness
+          let previewResult;
+          let urlsResult;
+          let retryCount = 0;
+          const maxRetries = 2;
+          
+          while (retryCount <= maxRetries) {
+            [previewResult, urlsResult] = await Promise.allSettled([
+              getJobPreview(currentJobId),
+              getDownloadUrls(currentJobId)
+            ]);
+            
+            // If both succeeded, we're done
+            if (previewResult.status === 'fulfilled' && urlsResult.status === 'fulfilled') {
+              break;
+            }
+            
+            // If we need to retry, wait a bit longer
+            if (retryCount < maxRetries) {
+              console.log(`Retrying preview/download fetch (attempt ${retryCount + 2}/${maxRetries + 1})`);
+              await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+            retryCount++;
+          }
+          
+          // Process preview data (priority - users want to see this first)
+          if (previewResult.status === 'fulfilled') {
+            const preview = previewResult.value;
             setPreviewData(preview);
-            setPreviewPoints(preview.preview_points);
-          } catch (error) {
-            console.error('Error fetching preview:', error);
-            // Fallback to CSV parsing if preview API fails
-            const csvUrl = Object.entries(urls.download_urls).find(([name]) => name.endsWith('.csv'))?.[1];
-            if (csvUrl) {
-              await loadPreviewFromCsv(csvUrl);
+            
+            // Check if it's a multi-file response
+            if ('file_previews' in preview) {
+              // Multi-file response
+              setFilePreviews(preview.file_previews);
+              // Use first file's preview points for backward compatibility
+              if (preview.file_previews.length > 0) {
+                setPreviewPoints(preview.file_previews[0].preview_points);
+              }
+            } else {
+              // Single file response
+              setPreviewPoints(preview.preview_points);
+              setFilePreviews([]);
+            }
+          } else {
+            console.error('Error fetching preview:', previewResult.reason);
+            // Fallback to CSV parsing if preview API fails and we have download URLs
+            if (urlsResult.status === 'fulfilled') {
+              const csvUrl = Object.entries(urlsResult.value.download_urls).find(([name]) => name.endsWith('.csv'))?.[1];
+              if (csvUrl) {
+                await loadPreviewFromCsv(csvUrl);
+              }
             }
           }
+          
+          // Clear loading state after preview is processed
+          setIsLoadingPreview(false);
+          
+          // Process download URLs
+          if (urlsResult.status === 'fulfilled') {
+            setDownloadUrls(urlsResult.value.download_urls);
+          } else {
+            console.error('Error fetching download URLs:', urlsResult.reason);
+            // Could retry or show error toast here if needed
+          }
         } else if (status.status === 'failed') {
+          // Stop the interval for failed jobs too
+          if (pollIntervalRef.current) {
+            clearInterval(pollIntervalRef.current);
+            pollIntervalRef.current = null;
+          }
+          
           setIsPolling(false);
           setIsProcessing(false);
           setShowProgress(false);
@@ -70,7 +152,13 @@ function App() {
       }
     }, 3000);
 
-    return () => clearInterval(pollInterval);
+    // Cleanup function - runs when component unmounts or dependencies change
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
+    };
   }, [currentJobId, isPolling]);
 
   const loadPreviewFromCsv = async (csvUrl: string) => {
@@ -132,7 +220,9 @@ function App() {
     setJobStatus('queued');
     setPreviewPoints([]);
     setPreviewData(null);
+    setFilePreviews([]);
     setDownloadUrls(null);
+    setIsLoadingPreview(false);
 
     try {
       const response = await uploadFiles(files, config, (progress) => {
@@ -228,9 +318,11 @@ function App() {
             <div className="hidden lg:block">
               <Preview 
                 points={previewPoints} 
-                isLoading={isPolling && jobStatus === 'processing'}
-                totalPoints={previewData?.data_quality.total_points}
-                elevationStats={previewData?.elevation_statistics}
+                isLoading={isLoadingPreview || (isPolling && jobStatus === 'processing')}
+                totalPoints={previewData && 'data_quality' in previewData ? previewData.data_quality.total_points : undefined}
+                elevationStats={previewData && 'elevation_statistics' in previewData ? previewData.elevation_statistics : undefined}
+                filePreviews={filePreviews.length > 0 ? filePreviews : undefined}
+                isMultiFile={filePreviews.length > 0}
               />
             </div>
           </div>
@@ -248,9 +340,11 @@ function App() {
             <div className="lg:hidden">
               <Preview 
                 points={previewPoints} 
-                isLoading={isPolling && jobStatus === 'processing'}
-                totalPoints={previewData?.data_quality.total_points}
-                elevationStats={previewData?.elevation_statistics}
+                isLoading={isLoadingPreview || (isPolling && jobStatus === 'processing')}
+                totalPoints={previewData && 'data_quality' in previewData ? previewData.data_quality.total_points : undefined}
+                elevationStats={previewData && 'elevation_statistics' in previewData ? previewData.elevation_statistics : undefined}
+                filePreviews={filePreviews.length > 0 ? filePreviews : undefined}
+                isMultiFile={filePreviews.length > 0}
               />
             </div>
             <Download

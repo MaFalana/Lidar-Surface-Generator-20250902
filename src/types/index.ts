@@ -122,6 +122,14 @@ export interface FileMetadata {
   system_identifier: string;
 }
 
+export interface FilePreview {
+  preview_points: PNEZDPoint[];
+  elevation_statistics: ElevationStatistics;
+  spatial_coverage: SpatialCoverage;
+  data_quality: DataQuality;
+  file_metadata: FileMetadata;
+}
+
 export interface JobPreviewResponse {
   job_id: string;
   preview_points: PNEZDPoint[];
@@ -129,5 +137,14 @@ export interface JobPreviewResponse {
   spatial_coverage: SpatialCoverage;
   data_quality: DataQuality;
   file_metadata: FileMetadata;
+  processing_time_ms: number;
+}
+
+export interface MultiFilePreviewResponse {
+  job_id: string;
+  is_merge_job: boolean;
+  file_count: number;
+  file_previews: FilePreview[];
+  merged_preview: FilePreview | null;
   processing_time_ms: number;
 }
