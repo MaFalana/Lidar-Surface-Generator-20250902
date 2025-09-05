@@ -7,7 +7,7 @@ import { Download } from './components/Download/Download';
 import { ProgressIndicator } from './components/Progress/ProgressIndicator';
 import { uploadFiles } from './services/upload';
 import { getJobStatus, getDownloadUrls, downloadFile, getJobPreview } from './services/jobs';
-import { ProcessingConfig, JobStatus, PNEZDPoint, JobPreviewResponse, MultiFilePreviewResponse, FilePreview } from './types';
+import { ProcessingConfig, JobStatus, PNEZDPoint, JobPreviewResponse, MultiFilePreviewResponse, FilePreview, DownloadResponse } from './types';
 import { hwcLogoDark } from './assets/index';
 import './styles/index.css';
 
@@ -20,7 +20,7 @@ function App() {
   const [isPolling, setIsPolling] = useState(false);
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const [previewPoints, setPreviewPoints] = useState<PNEZDPoint[]>([]);
-  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [previewData, setPreviewData] = useState<JobPreviewResponse | MultiFilePreviewResponse | null>(null);
   const [filePreviews, setFilePreviews] = useState<FilePreview[]>([]);
   const [downloadUrls, setDownloadUrls] = useState<Record<string, string> | null>(null);
@@ -72,16 +72,19 @@ function App() {
           await new Promise(resolve => setTimeout(resolve, 1500));
           
           // Try to fetch with retry logic for robustness
-          let previewResult;
-          let urlsResult;
+          let previewResult: PromiseSettledResult<JobPreviewResponse | MultiFilePreviewResponse> | undefined;
+          let urlsResult: PromiseSettledResult<DownloadResponse> | undefined;
           let retryCount = 0;
           const maxRetries = 2;
           
           while (retryCount <= maxRetries) {
-            [previewResult, urlsResult] = await Promise.allSettled([
+            const results = await Promise.allSettled([
               getJobPreview(currentJobId),
               getDownloadUrls(currentJobId)
             ]);
+            
+            previewResult = results[0];
+            urlsResult = results[1];
             
             // If both succeeded, we're done
             if (previewResult.status === 'fulfilled' && urlsResult.status === 'fulfilled') {
@@ -97,7 +100,7 @@ function App() {
           }
           
           // Process preview data (priority - users want to see this first)
-          if (previewResult.status === 'fulfilled') {
+          if (previewResult && previewResult.status === 'fulfilled') {
             const preview = previewResult.value;
             setPreviewData(preview);
             
@@ -114,12 +117,13 @@ function App() {
               setPreviewPoints(preview.preview_points);
               setFilePreviews([]);
             }
-          } else {
+          } else if (previewResult && previewResult.status === 'rejected') {
             console.error('Error fetching preview:', previewResult.reason);
             // Fallback to CSV parsing if preview API fails and we have download URLs
-            if (urlsResult.status === 'fulfilled') {
-              const csvUrl = Object.entries(urlsResult.value.download_urls).find(([name]) => name.endsWith('.csv'))?.[1];
-              if (csvUrl) {
+            if (urlsResult && urlsResult.status === 'fulfilled') {
+              const csvEntry = Object.entries(urlsResult.value.download_urls).find(([name]) => name.endsWith('.csv'));
+              if (csvEntry && csvEntry[1]) {
+                const csvUrl = csvEntry[1];
                 await loadPreviewFromCsv(csvUrl);
               }
             }
@@ -129,9 +133,9 @@ function App() {
           setIsLoadingPreview(false);
           
           // Process download URLs
-          if (urlsResult.status === 'fulfilled') {
+          if (urlsResult && urlsResult.status === 'fulfilled') {
             setDownloadUrls(urlsResult.value.download_urls);
-          } else {
+          } else if (urlsResult && urlsResult.status === 'rejected') {
             console.error('Error fetching download URLs:', urlsResult.reason);
             // Could retry or show error toast here if needed
           }
