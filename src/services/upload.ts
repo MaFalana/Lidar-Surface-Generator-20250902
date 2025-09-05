@@ -23,9 +23,7 @@ export const uploadFiles = async (
   if (config.merged_output_name) formData.append('merged_output_name', config.merged_output_name);
 
   const response = await api.post<UploadResponse>('/api/v1/upload/', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
+    // Don't set Content-Type header - let browser set it with boundary
     onUploadProgress: (progressEvent) => {
       if (progressEvent.total && onProgress) {
         const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
