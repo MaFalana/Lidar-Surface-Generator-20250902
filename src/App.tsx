@@ -51,6 +51,12 @@ function App() {
         setJobStatus(status.status);
         setJobProgress(status.progress || 0);
 
+        // Start preview loading when we first detect processing
+        if (status.status === 'processing' && !isLoadingPreview) {
+          console.log('Job started processing - beginning preview loading state');
+          setIsLoadingPreview(true);
+        }
+
         if (status.status === 'completed') {
           // IMMEDIATELY stop the interval - this is the key fix!
           if (pollIntervalRef.current) {
@@ -64,39 +70,65 @@ function App() {
           setShowProgress(false);
           toast.success('Processing completed successfully!');
           
-          // Set loading state for preview while fetching
-          setIsLoadingPreview(true);
+          // Preview loading state should already be active from when processing started
+          // setIsLoadingPreview(true); // Already set when job started processing
           
-          // Add a small delay to ensure files are written to Azure Blob Storage
-          // This prevents 404 errors when backend reports completion before files are ready
-          await new Promise(resolve => setTimeout(resolve, 1500));
-          
-          // Try to fetch with retry logic for robustness
-          let previewResult: PromiseSettledResult<JobPreviewResponse | MultiFilePreviewResponse> | undefined;
+          // Start with download URLs immediately (these are usually ready)
           let urlsResult: PromiseSettledResult<DownloadResponse> | undefined;
-          let retryCount = 0;
-          const maxRetries = 2;
+          try {
+            const urlsResponse = await getDownloadUrls(currentJobId);
+            urlsResult = { status: 'fulfilled' as const, value: urlsResponse };
+          } catch (error) {
+            urlsResult = { status: 'rejected' as const, reason: error };
+          }
           
+          // Poll preview endpoint until data is ready
+          let previewResult: PromiseSettledResult<JobPreviewResponse | MultiFilePreviewResponse> | undefined;
+          let retryCount = 0;
+          const maxRetries = 5; // Try up to 5 times
+          
+          console.log('Polling for preview data...');
           while (retryCount <= maxRetries) {
-            const results = await Promise.allSettled([
-              getJobPreview(currentJobId),
-              getDownloadUrls(currentJobId)
-            ]);
-            
-            previewResult = results[0];
-            urlsResult = results[1];
-            
-            // If both succeeded, we're done
-            if (previewResult.status === 'fulfilled' && urlsResult.status === 'fulfilled') {
-              break;
+            try {
+              const preview = await getJobPreview(currentJobId);
+              
+              // Check if preview has actual data - use total_processed_points as fallback
+              let hasValidData = false;
+              if ('file_previews' in preview) {
+                // Multi-file response - check if any file has preview points OR if total points exist
+                hasValidData = preview.file_previews.some(fp => fp.preview_points && fp.preview_points.length > 0) ||
+                               !!(preview.total_processed_points && preview.total_processed_points > 0);
+              } else {
+                // Single file response - check preview points OR total processed points
+                hasValidData = !!(preview.preview_points && preview.preview_points.length > 0) ||
+                               !!(preview.total_processed_points && preview.total_processed_points > 0);
+              }
+              
+              if (hasValidData) {
+                console.log(`Preview data ready! (attempt ${retryCount + 1})`);
+                previewResult = { status: 'fulfilled' as const, value: preview };
+                break;
+              } else {
+                console.log(`Preview data not ready yet, attempt ${retryCount + 1}/${maxRetries + 1}`);
+              }
+            } catch (error) {
+              console.log(`Preview fetch error on attempt ${retryCount + 1}:`, error);
             }
             
-            // If we need to retry, wait a bit longer
+            // If we need to retry, wait before next attempt
             if (retryCount < maxRetries) {
-              console.log(`Retrying preview/download fetch (attempt ${retryCount + 2}/${maxRetries + 1})`);
-              await new Promise(resolve => setTimeout(resolve, 2000));
+              await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
             }
             retryCount++;
+          }
+          
+          // If we still don't have preview data, mark as failed
+          if (!previewResult || previewResult.status !== 'fulfilled') {
+            console.log('Failed to get preview data after all retries');
+            previewResult = { 
+              status: 'rejected' as const, 
+              reason: new Error('Preview data not available after polling') 
+            };
           }
           
           // Process preview data (priority - users want to see this first)
@@ -323,7 +355,13 @@ function App() {
               <Preview 
                 points={previewPoints} 
                 isLoading={isLoadingPreview || (isPolling && jobStatus === 'processing')}
-                totalPoints={previewData && 'data_quality' in previewData ? previewData.data_quality.total_points : undefined}
+                totalPoints={
+                  previewData ? (
+                    'total_processed_points' in previewData ? previewData.total_processed_points :
+                    'data_quality' in previewData ? previewData.data_quality.total_points : 
+                    undefined
+                  ) : undefined
+                }
                 elevationStats={previewData && 'elevation_statistics' in previewData ? previewData.elevation_statistics : undefined}
                 filePreviews={filePreviews.length > 0 ? filePreviews : undefined}
                 isMultiFile={filePreviews.length > 0}
@@ -345,7 +383,13 @@ function App() {
               <Preview 
                 points={previewPoints} 
                 isLoading={isLoadingPreview || (isPolling && jobStatus === 'processing')}
-                totalPoints={previewData && 'data_quality' in previewData ? previewData.data_quality.total_points : undefined}
+                totalPoints={
+                  previewData ? (
+                    'total_processed_points' in previewData ? previewData.total_processed_points :
+                    'data_quality' in previewData ? previewData.data_quality.total_points : 
+                    undefined
+                  ) : undefined
+                }
                 elevationStats={previewData && 'elevation_statistics' in previewData ? previewData.elevation_statistics : undefined}
                 filePreviews={filePreviews.length > 0 ? filePreviews : undefined}
                 isMultiFile={filePreviews.length > 0}

@@ -31,7 +31,11 @@ export const Preview: React.FC<PreviewProps> = ({ points, isLoading, totalPoints
     : elevationStats 
     ? { min: elevationStats.min, max: elevationStats.max, avg: elevationStats.mean }
     : calculateStats();
-  const displayTotalPoints = activePreview ? activePreview.data_quality.total_points : totalPoints;
+  // Better fallback logic for total points
+  const displayTotalPoints = activePreview?.data_quality?.total_points || 
+                            totalPoints || 
+                            (filePreviews && filePreviews[0]?.data_quality?.total_points) ||
+                            displayPoints.length;
 
   return (
     <div className="section-card">
@@ -78,7 +82,7 @@ export const Preview: React.FC<PreviewProps> = ({ points, isLoading, totalPoints
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div className="bg-gray-50 rounded-lg p-3">
               <p className="text-xs text-gray-500 uppercase tracking-wide">Total Points</p>
-              <p className="text-lg font-semibold text-hwc-dark">{displayTotalPoints?.toLocaleString() || displayPoints.length.toLocaleString()}</p>
+              <p className="text-lg font-semibold text-hwc-dark">{displayTotalPoints.toLocaleString()}</p>
             </div>
             <div className="bg-gray-50 rounded-lg p-3">
               <p className="text-xs text-gray-500 uppercase tracking-wide">Min Elevation</p>

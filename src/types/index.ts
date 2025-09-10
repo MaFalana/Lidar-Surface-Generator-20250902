@@ -132,6 +132,7 @@ export interface FilePreview {
 
 export interface JobPreviewResponse {
   job_id: string;
+  total_processed_points?: number;
   preview_points: PNEZDPoint[];
   elevation_statistics: ElevationStatistics;
   spatial_coverage: SpatialCoverage;
@@ -144,6 +145,7 @@ export interface MultiFilePreviewResponse {
   job_id: string;
   is_merge_job: boolean;
   file_count: number;
+  total_processed_points?: number;
   file_previews: FilePreview[];
   merged_preview: FilePreview | null;
   processing_time_ms: number;

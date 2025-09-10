@@ -38,6 +38,12 @@ Azure Blob Storage is configured with automatic file maintenance handled by the 
 - [x] Make header and progress sticky
 - [x] Remove checkmarks from format toggle buttons
 
+## Latest Session Tasks ✅
+- [x] Fix total processed points display issue in preview section
+- [x] Add missing total_processed_points field to TypeScript interfaces
+- [x] Update App.tsx to properly handle both single-file and multi-file total points display
+- [x] Fix TypeScript compilation errors in job status polling
+
 ## Ready for Deployment 🚀
 Frontend is feature-complete and ready for production deployment!
 
