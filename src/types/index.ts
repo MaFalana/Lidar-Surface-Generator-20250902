@@ -5,6 +5,14 @@ export interface UploadResponse {
   files_uploaded: number;
 }
 
+export interface ProcessingPhase {
+  name: string;
+  status: 'pending' | 'active' | 'completed' | 'failed';
+  progress: number;
+  label: string;
+  description?: string;
+}
+
 export interface JobStatusResponse {
   job_id: string;
   status: JobStatus;
@@ -12,6 +20,13 @@ export interface JobStatusResponse {
   updated_at: string;
   completed_at?: string;
   progress?: number;
+  current_phase?: string;
+  phase_progress?: number;
+  phases?: ProcessingPhase[];
+  files_processed?: number;
+  total_files?: number;
+  current_file?: string;
+  estimated_time_remaining?: number;
   input_files: string[];
   output_files?: string[];
   error_message?: string;

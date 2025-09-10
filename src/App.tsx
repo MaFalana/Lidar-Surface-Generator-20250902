@@ -7,7 +7,7 @@ import { Download } from './components/Download/Download';
 import { ProgressIndicator } from './components/Progress/ProgressIndicator';
 import { uploadFiles } from './services/upload';
 import { getJobStatus, getDownloadUrls, downloadFile, getJobPreview } from './services/jobs';
-import { ProcessingConfig, JobStatus, PNEZDPoint, JobPreviewResponse, MultiFilePreviewResponse, FilePreview, DownloadResponse } from './types';
+import { ProcessingConfig, JobStatus, PNEZDPoint, JobPreviewResponse, MultiFilePreviewResponse, FilePreview, DownloadResponse, JobStatusResponse } from './types';
 import { hwcLogoDark } from './assets/index';
 import './styles/index.css';
 
@@ -28,6 +28,8 @@ function App() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [jobProgress, setJobProgress] = useState(0);
   const [showProgress, setShowProgress] = useState(false);
+  // Enhanced progress tracking
+  const [statusResponse, setStatusResponse] = useState<JobStatusResponse | null>(null);
 
   // Poll job status
   useEffect(() => {
@@ -48,6 +50,7 @@ function App() {
     pollIntervalRef.current = setInterval(async () => {
       try {
         const status = await getJobStatus(currentJobId);
+        setStatusResponse(status);
         setJobStatus(status.status);
         setJobProgress(status.progress || 0);
 
@@ -68,7 +71,7 @@ function App() {
           setIsPolling(false);
           setIsProcessing(false);
           setShowProgress(false);
-          toast.success('Processing completed successfully!');
+          
           
           // Preview loading state should already be active from when processing started
           // setIsLoadingPreview(true); // Already set when job started processing
@@ -197,6 +200,13 @@ function App() {
     };
   }, [currentJobId, isPolling]);
 
+  // Show completion toast only once when job status changes to completed
+  useEffect(() => {
+    if (jobStatus === 'completed') {
+      toast.success('Processing completed successfully!');
+    }
+  }, [jobStatus]);
+
   const loadPreviewFromCsv = async (csvUrl: string) => {
     try {
       // Use fetch with proper headers to avoid CORS
@@ -259,6 +269,7 @@ function App() {
     setFilePreviews([]);
     setDownloadUrls(null);
     setIsLoadingPreview(false);
+    setStatusResponse(null);
 
     try {
       const response = await uploadFiles(files, config, (progress) => {
@@ -267,7 +278,6 @@ function App() {
 
       setCurrentJobId(response.job_id);
       setIsPolling(true);
-      toast.success('Files uploaded successfully! Processing started...');
     } catch (error: any) {
       toast.error(error.response?.data?.detail || 'Upload failed');
       setIsProcessing(false);
@@ -337,6 +347,8 @@ function App() {
                 uploadProgress={uploadProgress}
                 jobStatus={jobStatus || undefined}
                 jobProgress={jobProgress}
+                totalFiles={statusResponse?.total_files || (files.length > 1 ? files.length : undefined)}
+                currentFile={statusResponse?.current_file}
               />
             </div>
           </div>
