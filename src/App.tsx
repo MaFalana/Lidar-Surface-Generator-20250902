@@ -286,11 +286,21 @@ function App() {
     }
   };
 
+  const truncateFilename = (filename: string, maxLength: number = 30) => {
+    if (filename.length <= maxLength) return filename;
+    
+    const extension = filename.substring(filename.lastIndexOf('.'));
+    const nameWithoutExt = filename.substring(0, filename.lastIndexOf('.'));
+    const truncatedName = nameWithoutExt.substring(0, maxLength - extension.length - 3) + '...';
+    
+    return truncatedName + extension;
+  };
+
   const handleDownload = async (url: string, filename: string) => {
     setIsDownloading(true);
     try {
       await downloadFile(url, filename);
-      toast.success(`Downloaded ${filename}`);
+      toast.success(`Downloaded ${truncateFilename(filename)}`);
     } catch (error) {
       toast.error('Download failed');
     } finally {
