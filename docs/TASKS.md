@@ -6,6 +6,8 @@ Successfully built a responsive React/TypeScript frontend for the LiDAR Breaklin
 API is deployed at: https://surface-gen-api.purplebush-adcf4e3b.eastus.azurecontainerapps.io/
 Azure Blob Storage is configured with automatic file maintenance handled by the API.
 
+**Latest Enhancement:** Added threshold adjustment UI component with both slider and numeric input controls. Users can now adjust the breakline detection sensitivity from 0.0 to 2.0, with preset options for Gentle (0.2), Moderate (0.5), and Steep (1.0) terrain types.
+
 ## Completed Tasks ✅
 - [x] Review existing project structure and API documentation
 - [x] Review reference images and style specifications  
@@ -43,6 +45,12 @@ Azure Blob Storage is configured with automatic file maintenance handled by the 
 - [x] Add missing total_processed_points field to TypeScript interfaces
 - [x] Update App.tsx to properly handle both single-file and multi-file total points display
 - [x] Fix TypeScript compilation errors in job status polling
+- [x] Add threshold adjustment UI component with slider and numeric input
+- [x] Implement preset buttons for Gentle (0.2), Moderate (0.5), and Steep (1.0) threshold values
+- [x] Add advanced mode toggle for manual numeric input
+- [x] Style threshold slider with HWC branding and responsive design
+- [x] Integrate threshold control into Configuration component
+- [x] Pass threshold parameter to backend API during file upload
 
 ## Ready for Deployment 🚀
 Frontend is feature-complete and ready for production deployment!
@@ -52,12 +60,13 @@ Frontend is feature-complete and ready for production deployment!
 ### Key Features Implemented:
 1. **File Upload**: Drag-and-drop interface with multi-file support
 2. **Configuration**: Grid spacing options (25/50 feet, easily extendable), CRS selection, output formats
-3. **Info Boxes**: Indiana LiDAR reference and Purdue LiDAR source link
-4. **Job Processing**: Real-time status polling with visual indicators
-5. **PNEZD Preview**: Table with first 50 points and elevation statistics
-6. **Download**: Individual or bulk download options with auto-deletion notice
-7. **Retry Mechanism**: Automatic retry for server errors (502/503)
-8. **Responsive Design**: Mobile-friendly layout
+3. **Threshold Control**: Interactive slider with presets (Gentle/Moderate/Steep) and advanced numeric input
+4. **Info Boxes**: Indiana LiDAR reference and Purdue LiDAR source link
+5. **Job Processing**: Real-time status polling with visual indicators
+6. **PNEZD Preview**: Table with first 50 points and elevation statistics
+7. **Download**: Individual or bulk download options with auto-deletion notice
+8. **Retry Mechanism**: Automatic retry for server errors (502/503)
+9. **Responsive Design**: Mobile-friendly layout
 
 ### To Run the Application:
 ```bash

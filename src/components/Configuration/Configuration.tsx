@@ -3,6 +3,7 @@ import Select from 'react-select';
 import { ProcessingConfig, EPSGOption } from '../../types';
 import { GRID_SPACING_OPTIONS, OUTPUT_FORMATS, INDIANA_LIDAR_INFO, LIDAR_SOURCE_INFO } from '../../utils/constants';
 import epsgData from '../../data/EPSG.json';
+import { ThresholdControl } from './ThresholdControl';
 
 interface ConfigurationProps {
   config: ProcessingConfig;
@@ -22,6 +23,7 @@ export const Configuration: React.FC<ConfigurationProps> = ({
   const [selectedGridSpacing, setSelectedGridSpacing] = useState(GRID_SPACING_OPTIONS[0].value);
   const [selectedFormats, setSelectedFormats] = useState<string[]>(['dxf']);
   const [mergeOutputs, setMergeOutputs] = useState(false);
+  const [threshold, setThreshold] = useState(0.5); // Default threshold value
 
   const epsgOptions = epsgData as EPSGOption[];
   
@@ -37,8 +39,9 @@ export const Configuration: React.FC<ConfigurationProps> = ({
       voxel_size: selectedGridSpacing,
       output_formats: selectedFormats.join(','),
       merge_outputs: mergeOutputs,
+      threshold: threshold,
     });
-  }, [selectedGridSpacing, selectedFormats, mergeOutputs, onConfigChange]);
+  }, [selectedGridSpacing, selectedFormats, mergeOutputs, threshold, onConfigChange]);
 
   const toggleFormat = (format: string) => {
     setSelectedFormats(prev => 
@@ -98,6 +101,12 @@ export const Configuration: React.FC<ConfigurationProps> = ({
             ))}
           </div>
         </div>
+
+        {/* Threshold Control */}
+        <ThresholdControl
+          value={threshold}
+          onChange={setThreshold}
+        />
 
         {/* Source Coordinate System */}
         <div>
