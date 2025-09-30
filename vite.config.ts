@@ -5,7 +5,8 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   envPrefix: 'VITE_',
-  base: '/breakline-gen/',
+  // Use root path for Vercel, /breakline-gen/ for Azure
+  base: process.env.VERCEL ? '/' : '/breakline-gen/',
   build: {
     assetsDir: 'assets',
   },
