@@ -40,21 +40,6 @@ export const ThresholdControl: React.FC<ThresholdControlProps> = ({ value, onCha
     onChange(presetValue);
   };
 
-  const getSliderBackground = () => {
-    const percentage = (value / 2.0) * 100;
-    const recommendedStart = (0.3 / 2.0) * 100; // 15%
-    const recommendedEnd = (1.5 / 2.0) * 100;   // 75%
-
-    // Create a gradient with recommended zone highlighted
-    return `linear-gradient(to right,
-      #FEE2E2 0%,
-      #FEE2E2 ${recommendedStart}%,
-      #E5F3E5 ${recommendedStart}%,
-      #E5F3E5 ${recommendedEnd}%,
-      #FEE2E2 ${recommendedEnd}%,
-      #FEE2E2 100%)`;
-  };
-
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
