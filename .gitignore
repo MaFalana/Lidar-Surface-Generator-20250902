@@ -29,7 +29,7 @@ build/
 issues/
 
 # Ignore spec folders and files
-assets/
+
 references/
 # spec/
 
