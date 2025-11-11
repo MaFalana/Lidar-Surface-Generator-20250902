@@ -18,6 +18,10 @@ export const getDownloadUrls = async (jobId: string, expiryHours: number = 1): P
   return response.data;
 };
 
+export const cancelJob = async (jobId: string): Promise<void> => {
+  await api.delete(`/api/v1/jobs/${jobId}`);
+};
+
 export const downloadFile = async (url: string, filename: string): Promise<void> => {
   // Create a hidden anchor element and trigger download
   // This works with Azure Blob Storage SAS URLs without CORS issues

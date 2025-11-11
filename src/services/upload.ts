@@ -4,10 +4,11 @@ import { UploadResponse, ProcessingConfig } from '../types';
 export const uploadFiles = async (
   files: File[],
   config: ProcessingConfig,
-  onProgress?: (progress: number) => void
+  onProgress?: (progress: number) => void,
+  abortSignal?: AbortSignal
 ): Promise<UploadResponse> => {
   const formData = new FormData();
-  
+
   files.forEach((file) => {
     formData.append('files', file);
   });
@@ -24,6 +25,7 @@ export const uploadFiles = async (
 
   const response = await api.post<UploadResponse>('/api/v1/upload/', formData, {
     // Don't set Content-Type header - let browser set it with boundary
+    signal: abortSignal,
     onUploadProgress: (progressEvent) => {
       if (progressEvent.total && onProgress) {
         const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
