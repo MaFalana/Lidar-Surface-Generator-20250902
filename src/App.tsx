@@ -20,6 +20,7 @@ function App() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isPolling, setIsPolling] = useState(false);
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
   const [previewPoints, setPreviewPoints] = useState<PNEZDPoint[]>([]);
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -317,6 +318,10 @@ function App() {
   };
 
   const handleCancelJob = async () => {
+    if (isCancelling) return; // Prevent multiple cancel requests
+
+    setIsCancelling(true);
+
     // If we're still uploading (no job ID yet), abort the upload
     if (!currentJobId) {
       if (abortControllerRef.current) {
@@ -329,6 +334,7 @@ function App() {
       setUploadProgress(0);
       setJobProgress(0);
       setStatusResponse(null);
+      setIsCancelling(false);
       toast.success('Upload cancelled');
       return;
     }
@@ -347,11 +353,22 @@ function App() {
       setUploadProgress(0);
       setJobProgress(0);
       setStatusResponse(null);
+      setIsCancelling(false);
 
       toast.success('Job cancelled successfully');
     } catch (error: any) {
       console.error('Error cancelling job:', error);
-      toast.error(error.response?.data?.detail || 'Failed to cancel job');
+      setIsCancelling(false);
+
+      // Check if the error is because the job is already completed/failed
+      const errorMessage = error.response?.data?.detail || '';
+      if (errorMessage.includes('completed') || errorMessage.includes('failed')) {
+        // Job already finished, just hide the cancel button by not showing error
+        // The UI will update on next poll
+        return;
+      }
+
+      toast.error(errorMessage || 'Failed to cancel job');
     }
   };
 
@@ -403,17 +420,23 @@ function App() {
                             'Queued'}
                   </span>
                 </div>
-                {(isProcessing || jobStatus === 'queued' || jobStatus === 'processing') && (
-                  <button
-                    onClick={handleCancelJob}
-                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                    Cancel
-                  </button>
-                )}
+                {(isProcessing || jobStatus === 'queued' || jobStatus === 'processing') &&
+                  jobStatus !== 'completed' &&
+                  jobStatus !== 'failed' && (
+                    <button
+                      onClick={handleCancelJob}
+                      disabled={isCancelling}
+                      className={`px-4 py-2 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2 ${isCancelling
+                          ? 'bg-red-400 cursor-not-allowed'
+                          : 'bg-red-600 hover:bg-red-700'
+                        }`}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      {isCancelling ? 'Cancelling...' : 'Cancel'}
+                    </button>
+                  )}
               </div>
             )}
           </div>
