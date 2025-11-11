@@ -8,7 +8,6 @@ interface ThresholdControlProps {
 const MIN_THRESHOLD = 0.1;
 const MAX_THRESHOLD = 0.3;
 const STEP = 0.01;
-const DEFAULT_THRESHOLD = 0.1;
 
 export const ThresholdControl: React.FC<ThresholdControlProps> = ({ value, onChange }) => {
   const [localValue, setLocalValue] = useState(value.toString());
