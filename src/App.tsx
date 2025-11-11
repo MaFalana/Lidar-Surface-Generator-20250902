@@ -9,7 +9,7 @@ import { InfoBoxes } from './components/InfoBoxes/InfoBoxes';
 import { uploadFiles } from './services/upload';
 import { getJobStatus, getDownloadUrls, downloadFile, getJobPreview, cancelJob } from './services/jobs';
 import { ProcessingConfig, JobStatus, PNEZDPoint, JobPreviewResponse, MultiFilePreviewResponse, FilePreview, DownloadResponse, JobStatusResponse } from './types';
-import { hwcLogoDark } from './assets/index';
+import { hwcLogoDark } from './assets/index.ts';
 import './styles/index.css';
 
 function App() {
@@ -427,8 +427,8 @@ function App() {
                       onClick={handleCancelJob}
                       disabled={isCancelling}
                       className={`px-4 py-2 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2 ${isCancelling
-                          ? 'bg-red-400 cursor-not-allowed'
-                          : 'bg-red-600 hover:bg-red-700'
+                        ? 'bg-red-400 cursor-not-allowed'
+                        : 'bg-red-600 hover:bg-red-700'
                         }`}
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
