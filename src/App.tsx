@@ -9,7 +9,7 @@ import { InfoBoxes } from './components/InfoBoxes/InfoBoxes';
 import { uploadFiles } from './services/upload';
 import { getJobStatus, getDownloadUrls, downloadFile, getJobPreview, cancelJob } from './services/jobs';
 import { ProcessingConfig, JobStatus, PNEZDPoint, JobPreviewResponse, MultiFilePreviewResponse, FilePreview, DownloadResponse, JobStatusResponse } from './types';
-import { hwcLogoDark } from './assets/index.ts';
+import { hwcLogoDark } from './assets/index';
 import './styles/index.css';
 
 function App() {
